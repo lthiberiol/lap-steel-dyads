@@ -1,0 +1,198 @@
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 24px;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+.header {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.title {
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+  font-size: 14px;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #6b6054;
+  margin: 0;
+}
+
+.tuning {
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+  font-size: 11px;
+  color: #4a4439;
+  letter-spacing: 0.15em;
+}
+
+.controls {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 32px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+
+.filters {
+  display: flex;
+  gap: 20px;
+}
+
+.filter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.filter input[type="checkbox"] {
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border: 1px solid #4a4439;
+  background: #1a1814;
+  cursor: pointer;
+  position: relative;
+}
+
+.filter input[type="checkbox"]:checked {
+  background: #3a3530;
+  border-color: #6a6054;
+}
+
+.filter input[type="checkbox"]:checked::after {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 1px;
+  width: 4px;
+  height: 8px;
+  border: solid #a8a094;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.filterLabel {
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+  font-size: 12px;
+  color: #8a8074;
+}
+
+.filterCount {
+  color: #5a5449;
+  margin-left: 4px;
+}
+
+.displayMode {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.modeLabel {
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #6b6054;
+}
+
+.modeOptions {
+  display: flex;
+  gap: 2px;
+}
+
+.modeOption {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+  font-size: 12px;
+  padding: 8px 12px;
+  background: #1a1814;
+  border: 1px solid #3a3530;
+  color: #8a8074;
+  transition: all 0.1s;
+}
+
+.modeOption:hover {
+  background: #2a2620;
+  color: #a8a094;
+}
+
+.modeOption:has(input:checked) {
+  background: #3a3530;
+  color: #e8e0d4;
+  border-color: #5a5550;
+}
+
+.modeOption input[type="radio"] {
+  appearance: none;
+  width: 10px;
+  height: 10px;
+  border: 1px solid #5a5449;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+  position: relative;
+}
+
+.modeOption input[type="radio"]:checked {
+  border-color: #a8a094;
+}
+
+.modeOption input[type="radio"]:checked::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #a8a094;
+}
+
+.chordInfo {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  margin-bottom: 16px;
+  padding: 12px 0;
+  border-top: 1px solid #2a2620;
+  border-bottom: 1px solid #2a2620;
+}
+
+.chordName {
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+  font-size: 20px;
+  font-weight: 600;
+  color: #e8e0d4;
+}
+
+.chordTones {
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+  font-size: 14px;
+  color: #6b6054;
+  letter-spacing: 0.05em;
+}
+
+.fretboardWrapper {
+  flex: 1;
+  margin: 16px 0;
+}
+
+.footer {
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+  font-size: 11px;
+  color: #4a4439;
+  text-align: center;
+  padding-top: 16px;
+}

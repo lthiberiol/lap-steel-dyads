@@ -1,0 +1,223 @@
+.container {
+  width: 100%;
+  overflow-x: auto;
+  position: relative;
+}
+
+.svg {
+  display: block;
+  min-width: 1200px;
+  height: auto;
+}
+
+.board {
+  fill: #3d3225;
+}
+
+.nut {
+  fill: #d4cfc4;
+}
+
+.fret {
+  stroke: #8a7f6e;
+  stroke-width: 2;
+}
+
+.string {
+  stroke: #c9bda3;
+}
+
+.marker {
+  fill: #5c5344;
+}
+
+.stringLabel {
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+  font-size: 12px;
+  fill: #6b5f4f;
+  text-anchor: end;
+  dominant-baseline: middle;
+  font-weight: 500;
+}
+
+.fretNumber {
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+  font-size: 10px;
+  fill: #6b5f4f;
+  text-anchor: middle;
+  dominant-baseline: hanging;
+}
+
+/* Dyad styling */
+.dyad {
+  cursor: pointer;
+  transition: opacity 0.1s;
+}
+
+.dyadLine {
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+.dyadDot {
+  stroke-width: 2;
+}
+
+.dyadNote {
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+  font-size: 9px;
+  text-anchor: middle;
+  dominant-baseline: central;
+  font-weight: 600;
+  pointer-events: none;
+}
+
+/* Straight bar dyads - warm amber */
+.straight .dyadLine {
+  stroke: #c17f24;
+}
+
+.straight .dyadDot {
+  fill: #daa044;
+  stroke: #8b5a14;
+}
+
+.straight .dyadNote {
+  fill: #3d2a0a;
+}
+
+/* Slant dyads - cool teal */
+.slant .dyadLine {
+  stroke: #2a8a7a;
+}
+
+.slant .dyadDot {
+  fill: #44b8a4;
+  stroke: #1a5a4a;
+}
+
+.slant .dyadNote {
+  fill: #0a2a24;
+}
+
+/* Lever dyads - violet/purple */
+.lever .dyadLine {
+  stroke: #8a5ac4;
+}
+
+.lever .dyadDot {
+  fill: #a478d8;
+  stroke: #5a3a84;
+}
+
+.lever .dyadNote {
+  fill: #2a1a34;
+}
+
+.leverIndicator {
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+  font-size: 7px;
+  fill: #a478d8;
+  text-anchor: middle;
+  dominant-baseline: auto;
+  font-weight: 700;
+  pointer-events: none;
+}
+
+/* Diatonic substitution dyads - muted green */
+.diatonic-sub .dyadLine {
+  stroke: #5a8a5a;
+  stroke-dasharray: 4 2;
+}
+
+.diatonic-sub .dyadDot {
+  fill: #78a878;
+  stroke: #3a5a3a;
+}
+
+.diatonic-sub .dyadNote {
+  fill: #1a2a1a;
+}
+
+/* Tritone substitution dyads - rose/magenta */
+.tritone-sub .dyadLine {
+  stroke: #a85a8a;
+  stroke-dasharray: 6 3;
+}
+
+.tritone-sub .dyadDot {
+  fill: #c878a8;
+  stroke: #6a3a5a;
+}
+
+.tritone-sub .dyadNote {
+  fill: #2a1a24;
+}
+
+/* Substitution dyads are slightly less prominent */
+.diatonic-sub,
+.tritone-sub {
+  opacity: 0.75;
+}
+
+.diatonic-sub:hover,
+.tritone-sub:hover {
+  opacity: 1;
+}
+
+/* Hover state */
+.dyad:hover .dyadLine,
+.hovered .dyadLine {
+  stroke-width: 4;
+}
+
+.dyad:hover .dyadDot,
+.hovered .dyadDot {
+  r: 10;
+}
+
+/* Info panel */
+.info {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  gap: 12px;
+  padding: 8px 12px;
+  background: #2a261f;
+  border: 1px solid #4a4439;
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+  font-size: 12px;
+}
+
+.infoNotes {
+  color: #e8e0d4;
+  font-weight: 600;
+}
+
+.infoInterval {
+  color: #a89880;
+}
+
+.infoType {
+  color: #6b6054;
+}
+
+.infoFrets {
+  color: #6b6054;
+}
+
+.infoSource {
+  color: #a478d8;
+  font-weight: 500;
+}
+
+.infoSub {
+  color: #78a878;
+  font-weight: 500;
+}
+
+.infoTritone {
+  color: #c878a8;
+  font-weight: 500;
+}

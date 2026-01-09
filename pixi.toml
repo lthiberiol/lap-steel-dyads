@@ -1,0 +1,13 @@
+[workspace]
+channels = ["conda-forge"]
+name = "lap-steel-dyads"
+platforms = ["osx-arm64"]
+version = "0.1.0"
+
+[tasks]
+dev = "npm run dev"
+build = "npm run build"
+preview = "npm run preview"
+
+[dependencies]
+nodejs = ">=25.2.1,<25.3"
