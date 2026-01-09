@@ -1,12 +1,12 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useCallback } from 'react'
 import { LAP_STEEL_TUNING, FRET_COUNT, FRET_MARKERS, DOUBLE_MARKERS } from '../lib/fretboard'
 import { Dyad, DyadSource } from '../lib/dyads'
+import { playDyad, resumeAudio } from '../lib/audio'
 import styles from './Fretboard.module.css'
 
 // Get CSS class based on dyad source
 function getSourceClass(source: DyadSource): string {
   switch (source) {
-    case 'lever': return styles.lever
     case 'diatonic-sub': return styles['diatonic-sub']
     case 'tritone-sub': return styles['tritone-sub']
     default: return ''
@@ -47,6 +47,19 @@ function stringY(string: number): number {
 
 export function Fretboard({ dyads, showStraight, showSlant }: FretboardProps) {
   const [hoveredDyad, setHoveredDyad] = useState<Dyad | null>(null)
+
+  // Handle dyad click to play sound
+  const handleDyadClick = useCallback((dyad: Dyad) => {
+    resumeAudio()
+    playDyad(
+      dyad.pos1.note,
+      dyad.pos1.string,
+      dyad.pos1.fret,
+      dyad.pos2.note,
+      dyad.pos2.string,
+      dyad.pos2.fret
+    )
+  }, [])
 
   // Filter dyads based on visibility toggles
   const visibleDyads = useMemo(() => {
@@ -165,6 +178,7 @@ export function Fretboard({ dyads, showStraight, showSlant }: FretboardProps) {
               className={`${styles.dyad} ${styles[dyad.type]} ${sourceClass} ${isHovered ? styles.hovered : ''}`}
               onMouseEnter={() => setHoveredDyad(dyad)}
               onMouseLeave={() => setHoveredDyad(null)}
+              onClick={() => handleDyadClick(dyad)}
             >
               {/* Connection line */}
               <line
@@ -180,13 +194,6 @@ export function Fretboard({ dyads, showStraight, showSlant }: FretboardProps) {
               {/* Note labels */}
               <text x={x1} y={y1} className={styles.dyadNote}>{dyad.pos1.note}</text>
               <text x={x2} y={y2} className={styles.dyadNote}>{dyad.pos2.note}</text>
-              {/* Lever indicators */}
-              {dyad.leverPositions?.includes(1) && (
-                <text x={x1} y={y1 - 12} className={styles.leverIndicator}>L</text>
-              )}
-              {dyad.leverPositions?.includes(2) && (
-                <text x={x2} y={y2 - 12} className={styles.leverIndicator}>L</text>
-              )}
             </g>
           )
         })}
@@ -204,9 +211,6 @@ export function Fretboard({ dyads, showStraight, showSlant }: FretboardProps) {
             fret {hoveredDyad.pos1.fret}
             {hoveredDyad.type === 'slant' && `–${hoveredDyad.pos2.fret}`}
           </span>
-          {hoveredDyad.source === 'lever' && (
-            <span className={styles.infoSource}>lever</span>
-          )}
           {hoveredDyad.substitutionInfo && (
             <span className={hoveredDyad.source === 'tritone-sub' ? styles.infoTritone : styles.infoSub}>
               {hoveredDyad.substitutionInfo.substituteChord} ({hoveredDyad.substitutionInfo.substituteDegree})

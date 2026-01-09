@@ -100,30 +100,6 @@
   fill: #0a2a24;
 }
 
-/* Lever dyads - violet/purple */
-.lever .dyadLine {
-  stroke: #8a5ac4;
-}
-
-.lever .dyadDot {
-  fill: #a478d8;
-  stroke: #5a3a84;
-}
-
-.lever .dyadNote {
-  fill: #2a1a34;
-}
-
-.leverIndicator {
-  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
-  font-size: 7px;
-  fill: #a478d8;
-  text-anchor: middle;
-  dominant-baseline: auto;
-  font-weight: 700;
-  pointer-events: none;
-}
-
 /* Diatonic substitution dyads - muted green */
 .diatonic-sub .dyadLine {
   stroke: #5a8a5a;
@@ -205,11 +181,6 @@
 
 .infoFrets {
   color: #6b6054;
-}
-
-.infoSource {
-  color: #a478d8;
-  font-weight: 500;
 }
 
 .infoSub {

@@ -1,9 +1,9 @@
 import { NoteName, getInterval, getIntervalName } from './music'
-import { FretPosition, findChordPositions, findChordPositionsWithLevers, LAP_STEEL_TUNING, FRET_COUNT, LEVER_CONFIG } from './fretboard'
+import { FretPosition, findChordPositions, LAP_STEEL_TUNING, FRET_COUNT } from './fretboard'
 import { Degree, getSubstitutions } from './substitutions'
 
 export type DyadType = 'straight' | 'slant'
-export type DyadSource = 'direct' | 'lever' | 'diatonic-sub' | 'tritone-sub'
+export type DyadSource = 'direct' | 'diatonic-sub' | 'tritone-sub'
 
 export interface Dyad {
   pos1: FretPosition
@@ -13,7 +13,6 @@ export interface Dyad {
   type: DyadType          // straight bar or slanted
   priority: number        // higher = more important (guide tones)
   source: DyadSource      // how this dyad was found
-  leverPositions?: number[] // which positions (1, 2, or both) use levers
   substitutionInfo?: {    // for substitution dyads
     substituteChord: string
     substituteDegree: string
@@ -56,20 +55,14 @@ function getDyadPriority(interval: number): number {
  * @param maxSlant Maximum fret difference for slanted dyads (default 1)
  * @param tuning Lap steel tuning (default GBDF#AD)
  * @param maxFret Maximum fret to search (default 24)
- * @param useLevers Whether to use lever-aware position finding (default true)
  */
 export function findDyads(
   chordTones: NoteName[],
   maxSlant = 1,
   tuning = LAP_STEEL_TUNING,
-  maxFret = FRET_COUNT,
-  useLevers = true
+  maxFret = FRET_COUNT
 ): Dyad[] {
-  // Use lever-aware position finding when enabled
-  const positions = useLevers
-    ? findChordPositionsWithLevers(chordTones, LEVER_CONFIG, tuning, maxFret)
-    : findChordPositions(chordTones, tuning, maxFret)
-
+  const positions = findChordPositions(chordTones, tuning, maxFret)
   const dyads: Dyad[] = []
   const seen = new Set<string>()
 
@@ -90,9 +83,9 @@ export function findDyads(
       // Determine type
       const type: DyadType = fretDiff === 0 ? 'straight' : 'slant'
 
-      // Create a unique key to avoid duplicates (include lever state)
+      // Create a unique key to avoid duplicates
       const [lower, higher] = pos1.string < pos2.string ? [pos1, pos2] : [pos2, pos1]
-      const key = `${lower.string}-${lower.fret}-${higher.string}-${higher.fret}-${lower.isLeverBent}-${higher.isLeverBent}`
+      const key = `${lower.string}-${lower.fret}-${higher.string}-${higher.fret}`
 
       if (seen.has(key)) continue
       seen.add(key)
@@ -102,11 +95,6 @@ export function findDyads(
       const intervalName = getIntervalName(interval)
       const priority = getDyadPriority(interval)
 
-      // Determine if this dyad uses levers
-      const leverPositions: number[] = []
-      if (lower.isLeverBent) leverPositions.push(1)
-      if (higher.isLeverBent) leverPositions.push(2)
-
       dyads.push({
         pos1: lower,
         pos2: higher,
@@ -114,8 +102,7 @@ export function findDyads(
         intervalName,
         type,
         priority,
-        source: leverPositions.length > 0 ? 'lever' : 'direct',
-        leverPositions: leverPositions.length > 0 ? leverPositions : undefined
+        source: 'direct'
       })
     }
   }
@@ -249,8 +236,7 @@ export function findSubstitutionDyads(
   const allSubDyads: Dyad[] = []
 
   for (const sub of substitutions) {
-    // Find dyads for substitution chord (without levers for subs)
-    const subDyads = findDyads(sub.substituteTones, maxSlant, tuning, maxFret, false)
+    const subDyads = findDyads(sub.substituteTones, maxSlant, tuning, maxFret)
 
     // Mark them as substitution dyads
     for (const dyad of subDyads) {
