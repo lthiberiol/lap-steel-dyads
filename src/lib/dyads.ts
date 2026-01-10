@@ -183,55 +183,104 @@ function dyadsOverlap(a: Dyad, b: Dyad, fretProximity = 2): boolean {
 }
 
 /**
- * Check if a note is a guide tone (3rd or 7th) relative to a chord root
- * Returns 'third', 'seventh', or null
+ * Get the harmonic importance score for a note relative to a chord root.
+ * Higher score = more important for defining chord quality.
+ *
+ * Scoring:
+ * - 3rd (m3/M3): 10 - defines major/minor quality
+ * - 7th (m7/M7): 9 - defines 7th chord type
+ * - Root: 6 - foundation
+ * - 9th (m9/M9): 4 - extension
+ * - 13th (m13/M13): 3 - extension
+ * - 11th (P11/#11): 3 - extension
+ * - 5th (P5/dim5/aug5): 2 - least defining
+ * - Other: 0
  */
-function getGuideToneRole(note: NoteName, chordRoot: NoteName): 'third' | 'seventh' | null {
+function getNoteImportance(note: NoteName, chordRoot: NoteName): number {
   const interval = getInterval(chordRoot, note)
-  // 3rd: minor 3rd (3) or major 3rd (4)
-  if (interval === 3 || interval === 4) return 'third'
-  // 7th: minor 7th (10) or major 7th (11)
-  if (interval === 10 || interval === 11) return 'seventh'
-  return null
+
+  switch (interval) {
+    case 3:  // m3
+    case 4:  // M3
+      return 10
+    case 10: // m7
+    case 11: // M7
+      return 9
+    case 0:  // Root
+      return 6
+    case 1:  // m9 (m2)
+    case 2:  // M9 (M2)
+      return 4
+    case 8:  // m13 (m6)
+    case 9:  // M13 (M6)
+      return 3
+    case 5:  // P11 (P4)
+    case 6:  // #11 (TT)
+      return 3
+    case 7:  // P5
+      return 2
+    default:
+      return 0
+  }
 }
 
 /**
- * Filter dyads to show only guide tone dyads.
+ * Calculate the guide tone score for a dyad.
+ * Sum of both notes' importance scores.
+ */
+function getDyadGuideScore(dyad: Dyad, chordRoot: NoteName): number {
+  return getNoteImportance(dyad.pos1.note, chordRoot) +
+         getNoteImportance(dyad.pos2.note, chordRoot)
+}
+
+/**
+ * Filter dyads to show only the most harmonically important ones.
  *
- * Guide tone dyads contain the 3rd AND 7th of the chord - the two notes
- * that define chord quality and are essential for voice leading.
+ * Prioritizes dyads containing guide tones (3rd, 7th) and other
+ * chord-defining intervals. Selects the best non-overlapping dyads
+ * across the fretboard.
+ *
+ * For 7th chords: prefers 3rd+7th dyads
+ * For triads: prefers 3rd+root dyads
+ * For extensions: includes 9th, 11th, 13th
  *
  * @param dyads Array of dyads to filter
- * @param chordRoot Root note of the chord (needed to determine which notes are 3rd/7th)
- * @param fretProximity Minimum fret distance between selected dyads (default 2)
+ * @param chordRoot Root note of the chord
+ * @param fretProximity Minimum fret distance between selected dyads (default 3)
  */
-export function filterGuideTones(dyads: Dyad[], chordRoot: NoteName | null, fretProximity = 2): Dyad[] {
+export function filterGuideTones(dyads: Dyad[], chordRoot: NoteName | null, fretProximity = 3): Dyad[] {
   if (!chordRoot) return []
 
-  // Filter to dyads where one note is the 3rd and the other is the 7th
-  const guideToneDyads = dyads.filter(d => {
-    const role1 = getGuideToneRole(d.pos1.note, chordRoot)
-    const role2 = getGuideToneRole(d.pos2.note, chordRoot)
+  // Score all dyads
+  const scored = dyads.map(d => ({
+    dyad: d,
+    score: getDyadGuideScore(d, chordRoot)
+  }))
 
-    // Must have one 3rd and one 7th
-    return (role1 === 'third' && role2 === 'seventh') ||
-           (role1 === 'seventh' && role2 === 'third')
+  // Filter out dyads with very low scores (both notes unimportant)
+  const meaningful = scored.filter(s => s.score >= 8)
+
+  // Sort by score (highest first), then by fret position
+  meaningful.sort((a, b) => {
+    if (b.score !== a.score) return b.score - a.score
+    return Math.min(a.dyad.pos1.fret, a.dyad.pos2.fret) -
+           Math.min(b.dyad.pos1.fret, b.dyad.pos2.fret)
   })
 
-  // Sort by fret position
-  const sorted = [...guideToneDyads].sort((a, b) => {
-    return Math.min(a.pos1.fret, a.pos2.fret) - Math.min(b.pos1.fret, b.pos2.fret)
-  })
-
-  // Greedily select non-overlapping dyads
+  // Greedily select non-overlapping dyads, preferring higher scores
   const selected: Dyad[] = []
 
-  for (const dyad of sorted) {
+  for (const { dyad } of meaningful) {
     const overlapsWithSelected = selected.some(s => dyadsOverlap(dyad, s, fretProximity))
     if (!overlapsWithSelected) {
       selected.push(dyad)
     }
   }
+
+  // Sort result by fret position for display
+  selected.sort((a, b) => {
+    return Math.min(a.pos1.fret, a.pos2.fret) - Math.min(b.pos1.fret, b.pos2.fret)
+  })
 
   return selected
 }
