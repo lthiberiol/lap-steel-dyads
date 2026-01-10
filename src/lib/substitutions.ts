@@ -1,4 +1,4 @@
-import { NoteName, transposeNote, getChordTones, noteToSemitone } from './music'
+import { NoteName, transposeNote, getChordTones } from './music'
 
 export type Degree = 'I' | 'ii' | 'iii' | 'IV' | 'V' | 'vi' | 'vii°'
 
