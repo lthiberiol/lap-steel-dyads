@@ -1,6 +1,7 @@
 import { useMemo, useState, useCallback } from 'react'
-import { LAP_STEEL_TUNING, FRET_COUNT, FRET_MARKERS, DOUBLE_MARKERS } from '../lib/fretboard'
+import { FRET_COUNT, FRET_MARKERS, DOUBLE_MARKERS } from '../lib/fretboard'
 import { Dyad, DyadSource } from '../lib/dyads'
+import { NoteName } from '../lib/music'
 import { playDyad, resumeAudio } from '../lib/audio'
 import styles from './Fretboard.module.css'
 
@@ -15,12 +16,12 @@ function getSourceClass(source: DyadSource): string {
 
 interface FretboardProps {
   dyads: Dyad[]
+  tuning: NoteName[]
   showStraight: boolean
   showSlant: boolean
 }
 
-// SVG dimensions and layout
-const STRING_COUNT = LAP_STEEL_TUNING.length
+// SVG dimensions and layout - base values
 const FRET_WIDTH = 48
 const STRING_SPACING = 28
 const NUT_WIDTH = 4
@@ -29,7 +30,6 @@ const PADDING_TOP = 30
 const PADDING_BOTTOM = 20
 
 const TOTAL_WIDTH = PADDING_LEFT + NUT_WIDTH + (FRET_COUNT * FRET_WIDTH) + 20
-const TOTAL_HEIGHT = PADDING_TOP + ((STRING_COUNT - 1) * STRING_SPACING) + PADDING_BOTTOM
 
 // Calculate X position for a fret (on the fret line - lap steel bar placement)
 function fretX(fret: number): number {
@@ -40,12 +40,17 @@ function fretX(fret: number): number {
 }
 
 // Calculate Y position for a string
-function stringY(string: number): number {
-  // String 0 (G, lowest) at bottom, String 5 (D, highest) at top
-  return PADDING_TOP + ((STRING_COUNT - 1 - string) * STRING_SPACING)
+function stringY(string: number, stringCount: number): number {
+  // String 0 (lowest) at bottom, highest string at top
+  return PADDING_TOP + ((stringCount - 1 - string) * STRING_SPACING)
 }
 
-export function Fretboard({ dyads, showStraight, showSlant }: FretboardProps) {
+// Calculate total height based on string count
+function getTotalHeight(stringCount: number): number {
+  return PADDING_TOP + ((stringCount - 1) * STRING_SPACING) + PADDING_BOTTOM
+}
+
+export function Fretboard({ dyads, tuning, showStraight, showSlant }: FretboardProps) {
   const [hoveredDyad, setHoveredDyad] = useState<Dyad | null>(null)
 
   // Handle dyad click to play sound
@@ -70,10 +75,13 @@ export function Fretboard({ dyads, showStraight, showSlant }: FretboardProps) {
     })
   }, [dyads, showStraight, showSlant])
 
+  const stringCount = tuning.length
+  const totalHeight = getTotalHeight(stringCount)
+
   return (
     <div className={styles.container}>
       <svg
-        viewBox={`0 0 ${TOTAL_WIDTH} ${TOTAL_HEIGHT}`}
+        viewBox={`0 0 ${TOTAL_WIDTH} ${totalHeight}`}
         className={styles.svg}
         preserveAspectRatio="xMinYMid meet"
       >
@@ -82,7 +90,7 @@ export function Fretboard({ dyads, showStraight, showSlant }: FretboardProps) {
           x={PADDING_LEFT}
           y={PADDING_TOP - 10}
           width={NUT_WIDTH + FRET_COUNT * FRET_WIDTH}
-          height={(STRING_COUNT - 1) * STRING_SPACING + 20}
+          height={(stringCount - 1) * STRING_SPACING + 20}
           className={styles.board}
         />
 
@@ -91,7 +99,7 @@ export function Fretboard({ dyads, showStraight, showSlant }: FretboardProps) {
           x={PADDING_LEFT}
           y={PADDING_TOP - 8}
           width={NUT_WIDTH}
-          height={(STRING_COUNT - 1) * STRING_SPACING + 16}
+          height={(stringCount - 1) * STRING_SPACING + 16}
           className={styles.nut}
         />
 
@@ -99,7 +107,7 @@ export function Fretboard({ dyads, showStraight, showSlant }: FretboardProps) {
         {FRET_MARKERS.map(fret => {
           const x = PADDING_LEFT + NUT_WIDTH + ((fret - 0.5) * FRET_WIDTH)
           const isDouble = DOUBLE_MARKERS.includes(fret)
-          const centerY = PADDING_TOP + ((STRING_COUNT - 1) * STRING_SPACING) / 2
+          const centerY = PADDING_TOP + ((stringCount - 1) * STRING_SPACING) / 2
 
           if (isDouble) {
             return (
@@ -121,30 +129,30 @@ export function Fretboard({ dyads, showStraight, showSlant }: FretboardProps) {
             x1={PADDING_LEFT + NUT_WIDTH + fret * FRET_WIDTH}
             y1={PADDING_TOP - 8}
             x2={PADDING_LEFT + NUT_WIDTH + fret * FRET_WIDTH}
-            y2={PADDING_TOP + (STRING_COUNT - 1) * STRING_SPACING + 8}
+            y2={PADDING_TOP + (stringCount - 1) * STRING_SPACING + 8}
             className={styles.fret}
           />
         ))}
 
         {/* Strings */}
-        {LAP_STEEL_TUNING.map((_, string) => (
+        {tuning.map((_, string) => (
           <line
             key={`string-${string}`}
             x1={PADDING_LEFT}
-            y1={stringY(string)}
+            y1={stringY(string, stringCount)}
             x2={PADDING_LEFT + NUT_WIDTH + FRET_COUNT * FRET_WIDTH}
-            y2={stringY(string)}
+            y2={stringY(string, stringCount)}
             className={styles.string}
-            style={{ strokeWidth: 1 + (STRING_COUNT - 1 - string) * 0.3 }}
+            style={{ strokeWidth: 1 + (stringCount - 1 - string) * 0.3 }}
           />
         ))}
 
         {/* String labels (tuning notes) */}
-        {LAP_STEEL_TUNING.map((note, string) => (
+        {tuning.map((note, string) => (
           <text
             key={`label-${string}`}
             x={PADDING_LEFT - 8}
-            y={stringY(string)}
+            y={stringY(string, stringCount)}
             className={styles.stringLabel}
           >
             {note}
@@ -156,7 +164,7 @@ export function Fretboard({ dyads, showStraight, showSlant }: FretboardProps) {
           <text
             key={`fretnum-${fret}`}
             x={fretX(fret)}
-            y={PADDING_TOP + (STRING_COUNT - 1) * STRING_SPACING + 24}
+            y={PADDING_TOP + (stringCount - 1) * STRING_SPACING + 24}
             className={styles.fretNumber}
           >
             {fret}
@@ -166,9 +174,9 @@ export function Fretboard({ dyads, showStraight, showSlant }: FretboardProps) {
         {/* Dyad highlights */}
         {visibleDyads.map((dyad, index) => {
           const x1 = fretX(dyad.pos1.fret)
-          const y1 = stringY(dyad.pos1.string)
+          const y1 = stringY(dyad.pos1.string, stringCount)
           const x2 = fretX(dyad.pos2.fret)
-          const y2 = stringY(dyad.pos2.string)
+          const y2 = stringY(dyad.pos2.string, stringCount)
           const isHovered = hoveredDyad === dyad
           const sourceClass = getSourceClass(dyad.source)
 
