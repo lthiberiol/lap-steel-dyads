@@ -4,8 +4,8 @@ import styles from './TuningInput.module.css'
 
 // Common lap steel tunings (low to high)
 export const PRESET_TUNINGS: Record<string, NoteName[]> = {
-  'C6 (GBDF#AD)': ['G', 'B', 'D', 'F#', 'A', 'D'],
-  'C6 (CEGACE)': ['C', 'E', 'G', 'A', 'C', 'E'],
+  'Gmaj9 (GBDF#AD)': ['G', 'B', 'D', 'F#', 'A', 'D'],
+  'C6/Am7 (CEGACE)': ['C', 'E', 'G', 'A', 'C', 'E'],
   'E9 (BD#EF#G#BE)': ['B', 'D#', 'E', 'F#', 'G#', 'B', 'E'],
   'Open G (DGDGBD)': ['D', 'G', 'D', 'G', 'B', 'D'],
   'Open D (DADF#AD)': ['D', 'A', 'D', 'F#', 'A', 'D'],
@@ -13,7 +13,7 @@ export const PRESET_TUNINGS: Record<string, NoteName[]> = {
   'Open A (EAEAC#E)': ['E', 'A', 'E', 'A', 'C#', 'E'],
 }
 
-const DEFAULT_TUNING_NAME = 'C6 (GBDF#AD)'
+const DEFAULT_TUNING_NAME = 'Gmaj9 (GBDF#AD)'
 
 interface TuningInputProps {
   onTuningChange: (tuning: NoteName[]) => void

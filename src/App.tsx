@@ -8,7 +8,7 @@ import styles from './App.module.css'
 
 type DisplayMode = 'all' | 'guide'
 
-const DEFAULT_TUNING = PRESET_TUNINGS['C6 (GBDF#AD)']
+const DEFAULT_TUNING = PRESET_TUNINGS['Gmaj9 (GBDF#AD)']
 
 function App() {
   const [tuning, setTuning] = useState<NoteName[]>(DEFAULT_TUNING)
