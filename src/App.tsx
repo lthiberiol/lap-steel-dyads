@@ -56,10 +56,13 @@ function App() {
 
   const dyads = useMemo(() => {
     if (displayMode === 'guide') {
-      return filterGuideTones(allDyads)
+      // Filter direct dyads for guide tones (3rd + 7th)
+      const filteredDirect = filterGuideTones(directDyads, chordRoot)
+      // For substitutions, we'd need each chord's root - for now show all
+      return [...filteredDirect, ...substitutionDyads]
     }
     return allDyads
-  }, [allDyads, displayMode])
+  }, [allDyads, directDyads, substitutionDyads, displayMode, chordRoot])
 
   const straightCount = useMemo(() => dyads.filter(d => d.type === 'straight').length, [dyads])
   const slantCount = useMemo(() => dyads.filter(d => d.type === 'slant').length, [dyads])

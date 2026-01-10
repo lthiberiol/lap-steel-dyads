@@ -183,26 +183,47 @@ function dyadsOverlap(a: Dyad, b: Dyad, fretProximity = 2): boolean {
 }
 
 /**
- * Filter dyads to show only guide tones, removing clutter from overlapping positions.
- * Keeps the highest priority dyad when multiple dyads overlap.
- *
- * Guide tones are intervals that define chord quality:
- * - 3rds (major/minor quality)
- * - 7ths (chord extension type)
- * - Tritones (dominant function)
+ * Check if a note is a guide tone (3rd or 7th) relative to a chord root
+ * Returns 'third', 'seventh', or null
  */
-export function filterGuideTones(dyads: Dyad[], fretProximity = 2): Dyad[] {
-  // First, filter to only high-priority intervals (3rds, 7ths, tritones)
-  const guideToneIntervals = [3, 4, 6, 10, 11] // m3, M3, TT, m7, M7
-  const guideToneDyads = dyads.filter(d => guideToneIntervals.includes(d.interval))
+function getGuideToneRole(note: NoteName, chordRoot: NoteName): 'third' | 'seventh' | null {
+  const interval = getInterval(chordRoot, note)
+  // 3rd: minor 3rd (3) or major 3rd (4)
+  if (interval === 3 || interval === 4) return 'third'
+  // 7th: minor 7th (10) or major 7th (11)
+  if (interval === 10 || interval === 11) return 'seventh'
+  return null
+}
 
-  // Sort by priority (highest first), then by fret position
+/**
+ * Filter dyads to show only guide tone dyads.
+ *
+ * Guide tone dyads contain the 3rd AND 7th of the chord - the two notes
+ * that define chord quality and are essential for voice leading.
+ *
+ * @param dyads Array of dyads to filter
+ * @param chordRoot Root note of the chord (needed to determine which notes are 3rd/7th)
+ * @param fretProximity Minimum fret distance between selected dyads (default 2)
+ */
+export function filterGuideTones(dyads: Dyad[], chordRoot: NoteName | null, fretProximity = 2): Dyad[] {
+  if (!chordRoot) return []
+
+  // Filter to dyads where one note is the 3rd and the other is the 7th
+  const guideToneDyads = dyads.filter(d => {
+    const role1 = getGuideToneRole(d.pos1.note, chordRoot)
+    const role2 = getGuideToneRole(d.pos2.note, chordRoot)
+
+    // Must have one 3rd and one 7th
+    return (role1 === 'third' && role2 === 'seventh') ||
+           (role1 === 'seventh' && role2 === 'third')
+  })
+
+  // Sort by fret position
   const sorted = [...guideToneDyads].sort((a, b) => {
-    if (b.priority !== a.priority) return b.priority - a.priority
     return Math.min(a.pos1.fret, a.pos2.fret) - Math.min(b.pos1.fret, b.pos2.fret)
   })
 
-  // Greedily select non-overlapping dyads, preferring higher priority
+  // Greedily select non-overlapping dyads
   const selected: Dyad[] = []
 
   for (const dyad of sorted) {
@@ -211,13 +232,6 @@ export function filterGuideTones(dyads: Dyad[], fretProximity = 2): Dyad[] {
       selected.push(dyad)
     }
   }
-
-  // Sort result by fret position for display
-  selected.sort((a, b) => {
-    const fretA = Math.min(a.pos1.fret, a.pos2.fret)
-    const fretB = Math.min(b.pos1.fret, b.pos2.fret)
-    return fretA - fretB
-  })
 
   return selected
 }
