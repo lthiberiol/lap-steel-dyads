@@ -100,47 +100,6 @@
   fill: #0a2a24;
 }
 
-/* Diatonic substitution dyads - muted green */
-.diatonic-sub .dyadLine {
-  stroke: #5a8a5a;
-  stroke-dasharray: 4 2;
-}
-
-.diatonic-sub .dyadDot {
-  fill: #78a878;
-  stroke: #3a5a3a;
-}
-
-.diatonic-sub .dyadNote {
-  fill: #1a2a1a;
-}
-
-/* Tritone substitution dyads - rose/magenta */
-.tritone-sub .dyadLine {
-  stroke: #a85a8a;
-  stroke-dasharray: 6 3;
-}
-
-.tritone-sub .dyadDot {
-  fill: #c878a8;
-  stroke: #6a3a5a;
-}
-
-.tritone-sub .dyadNote {
-  fill: #2a1a24;
-}
-
-/* Substitution dyads are slightly less prominent */
-.diatonic-sub,
-.tritone-sub {
-  opacity: 0.75;
-}
-
-.diatonic-sub:hover,
-.tritone-sub:hover {
-  opacity: 1;
-}
-
 /* Hover state */
 .dyad:hover .dyadLine,
 .hovered .dyadLine {
@@ -181,14 +140,4 @@
 
 .infoFrets {
   color: #6b6054;
-}
-
-.infoSub {
-  color: #78a878;
-  font-weight: 500;
-}
-
-.infoTritone {
-  color: #c878a8;
-  font-weight: 500;
 }

@@ -1,18 +1,9 @@
 import { useMemo, useState, useCallback } from 'react'
 import { FRET_COUNT, FRET_MARKERS, DOUBLE_MARKERS } from '../lib/fretboard'
-import { Dyad, DyadSource } from '../lib/dyads'
+import { Dyad } from '../lib/dyads'
 import { NoteName } from '../lib/music'
 import { playDyad, resumeAudio } from '../lib/audio'
 import styles from './Fretboard.module.css'
-
-// Get CSS class based on dyad source
-function getSourceClass(source: DyadSource): string {
-  switch (source) {
-    case 'diatonic-sub': return styles['diatonic-sub']
-    case 'tritone-sub': return styles['tritone-sub']
-    default: return ''
-  }
-}
 
 interface FretboardProps {
   dyads: Dyad[]
@@ -178,12 +169,11 @@ export function Fretboard({ dyads, tuning, showStraight, showSlant }: FretboardP
           const x2 = fretX(dyad.pos2.fret)
           const y2 = stringY(dyad.pos2.string, stringCount)
           const isHovered = hoveredDyad === dyad
-          const sourceClass = getSourceClass(dyad.source)
 
           return (
             <g
               key={`dyad-${index}`}
-              className={`${styles.dyad} ${styles[dyad.type]} ${sourceClass} ${isHovered ? styles.hovered : ''}`}
+              className={`${styles.dyad} ${styles[dyad.type]} ${isHovered ? styles.hovered : ''}`}
               onMouseEnter={() => setHoveredDyad(dyad)}
               onMouseLeave={() => setHoveredDyad(null)}
               onClick={() => handleDyadClick(dyad)}
@@ -219,11 +209,6 @@ export function Fretboard({ dyads, tuning, showStraight, showSlant }: FretboardP
             fret {hoveredDyad.pos1.fret}
             {hoveredDyad.type === 'slant' && `–${hoveredDyad.pos2.fret}`}
           </span>
-          {hoveredDyad.substitutionInfo && (
-            <span className={hoveredDyad.source === 'tritone-sub' ? styles.infoTritone : styles.infoSub}>
-              {hoveredDyad.substitutionInfo.substituteChord} ({hoveredDyad.substitutionInfo.substituteDegree})
-            </span>
-          )}
         </div>
       )}
     </div>

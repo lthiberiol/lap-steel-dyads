@@ -1,8 +1,8 @@
 import { useState, useCallback, useMemo } from 'react'
-import { ChordInput, Degree } from './components/ChordInput'
+import { ChordInput } from './components/ChordInput'
 import { TuningInput, PRESET_TUNINGS } from './components/TuningInput'
 import { Fretboard } from './components/Fretboard'
-import { findDyads, filterGuideTones, findSubstitutionDyads } from './lib/dyads'
+import { findDyads, filterGuideTones } from './lib/dyads'
 import { NoteName } from './lib/music'
 import styles from './App.module.css'
 
@@ -13,12 +13,10 @@ const DEFAULT_TUNING = PRESET_TUNINGS['Gmaj9 (GBDF#AD)']
 function App() {
   const [tuning, setTuning] = useState<NoteName[]>(DEFAULT_TUNING)
   const [chordTones, setChordTones] = useState<NoteName[]>(['C', 'E', 'G'])
-  const [chordName, setChordName] = useState('C (I)')
+  const [chordName, setChordName] = useState('C')
   const [chordRoot, setChordRoot] = useState<NoteName | null>('C')
-  const [degree, setDegree] = useState<Degree>('I')
   const [showStraight, setShowStraight] = useState(true)
   const [showSlant, setShowSlant] = useState(true)
-  const [showSubstitutions, setShowSubstitutions] = useState(true)
   const [displayMode, setDisplayMode] = useState<DisplayMode>('all')
 
   const handleTuningChange = useCallback((newTuning: NoteName[]) => {
@@ -28,41 +26,26 @@ function App() {
   const handleChordChange = useCallback((
     tones: NoteName[],
     name: string,
-    deg: Degree,
     root: NoteName | null
   ) => {
     setChordTones(tones)
     setChordName(name)
-    setDegree(deg)
     setChordRoot(root)
   }, [])
 
-  // Direct chord dyads
-  const directDyads = useMemo(() => {
+  // Find all dyads for the chord
+  const allDyads = useMemo(() => {
     if (chordTones.length === 0) return []
     return findDyads(chordTones, 1, tuning)
   }, [chordTones, tuning])
 
-  // Substitution dyads based on degree
-  const substitutionDyads = useMemo(() => {
-    if (!showSubstitutions || !chordRoot || chordTones.length === 0) return []
-    return findSubstitutionDyads(chordRoot, degree, 1, tuning)
-  }, [showSubstitutions, chordRoot, degree, chordTones.length, tuning])
-
-  // Combined dyads
-  const allDyads = useMemo(() => {
-    return [...directDyads, ...substitutionDyads]
-  }, [directDyads, substitutionDyads])
-
+  // Apply guide tone filter if selected
   const dyads = useMemo(() => {
     if (displayMode === 'guide') {
-      // Filter direct dyads for guide tones (3rd + 7th)
-      const filteredDirect = filterGuideTones(directDyads, chordRoot)
-      // For substitutions, we'd need each chord's root - for now show all
-      return [...filteredDirect, ...substitutionDyads]
+      return filterGuideTones(allDyads, chordRoot)
     }
     return allDyads
-  }, [allDyads, directDyads, substitutionDyads, displayMode, chordRoot])
+  }, [allDyads, displayMode, chordRoot])
 
   const straightCount = useMemo(() => dyads.filter(d => d.type === 'straight').length, [dyads])
   const slantCount = useMemo(() => dyads.filter(d => d.type === 'slant').length, [dyads])
@@ -123,16 +106,6 @@ function App() {
               slant <span className={styles.filterCount}>{slantCount}</span>
             </span>
           </label>
-          <label className={styles.filter}>
-            <input
-              type="checkbox"
-              checked={showSubstitutions}
-              onChange={e => setShowSubstitutions(e.target.checked)}
-            />
-            <span className={styles.filterLabel}>
-              substitutions <span className={styles.filterCount}>{substitutionDyads.length}</span>
-            </span>
-          </label>
         </div>
       </div>
 
@@ -155,7 +128,7 @@ function App() {
       </div>
 
       <footer className={styles.footer}>
-        hover over dyads for details
+        hover over dyads for details · click to play
       </footer>
     </div>
   )

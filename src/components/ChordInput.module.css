@@ -1,8 +1,7 @@
 .container {
   display: flex;
-  align-items: flex-end;
-  gap: 24px;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .inputGroup {
@@ -41,33 +40,6 @@
 
 .inputError {
   border-color: #8a4030;
-}
-
-.degrees {
-  display: flex;
-  gap: 2px;
-}
-
-.degree {
-  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
-  font-size: 13px;
-  padding: 8px 10px;
-  background: #1a1814;
-  border: 1px solid #3a3530;
-  color: #8a8074;
-  cursor: pointer;
-  transition: all 0.1s;
-}
-
-.degree:hover {
-  background: #2a2620;
-  color: #a8a094;
-}
-
-.degreeActive {
-  background: #3a3530;
-  color: #e8e0d4;
-  border-color: #5a5550;
 }
 
 .error {

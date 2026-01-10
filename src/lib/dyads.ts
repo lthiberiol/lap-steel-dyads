@@ -1,9 +1,7 @@
 import { NoteName, getInterval, getIntervalName } from './music'
 import { FretPosition, findChordPositions, LAP_STEEL_TUNING, FRET_COUNT } from './fretboard'
-import { Degree, getSubstitutions } from './substitutions'
 
 export type DyadType = 'straight' | 'slant'
-export type DyadSource = 'direct' | 'diatonic-sub' | 'tritone-sub'
 
 export interface Dyad {
   pos1: FretPosition
@@ -11,37 +9,6 @@ export interface Dyad {
   interval: number        // semitones between notes
   intervalName: string    // human readable (m3, P5, etc.)
   type: DyadType          // straight bar or slanted
-  priority: number        // higher = more important (guide tones)
-  source: DyadSource      // how this dyad was found
-  substitutionInfo?: {    // for substitution dyads
-    substituteChord: string
-    substituteDegree: string
-  }
-}
-
-// Guide tone priority scoring
-// 3rds and 7ths define chord quality and are most important
-const INTERVAL_PRIORITY: Record<number, number> = {
-  3: 10,   // m3 - defines minor quality
-  4: 10,   // M3 - defines major quality
-  10: 9,   // m7 - defines dominant/minor 7th
-  11: 9,   // M7 - defines major 7th
-  6: 8,    // TT - tritone, crucial for dominant resolution
-  7: 5,    // P5 - supportive but less defining
-  8: 4,    // m6
-  9: 4,    // M6
-  5: 3,    // P4
-  2: 2,    // M2
-  1: 1,    // m2
-  0: 0,    // unison
-}
-
-/**
- * Get priority score for a dyad based on its interval
- * Higher score = more harmonically important (guide tones)
- */
-function getDyadPriority(interval: number): number {
-  return INTERVAL_PRIORITY[interval] ?? 0
 }
 
 /**
@@ -93,7 +60,6 @@ export function findDyads(
       // Calculate interval
       const interval = getInterval(lower.note, higher.note)
       const intervalName = getIntervalName(interval)
-      const priority = getDyadPriority(interval)
 
       dyads.push({
         pos1: lower,
@@ -101,8 +67,6 @@ export function findDyads(
         interval,
         intervalName,
         type,
-        priority,
-        source: 'direct'
       })
     }
   }
@@ -126,35 +90,11 @@ export function filterDyadsByType(dyads: Dyad[], type: DyadType): Dyad[] {
 }
 
 /**
- * Filter dyads by interval
- */
-export function filterDyadsByInterval(dyads: Dyad[], intervals: number[]): Dyad[] {
-  return dyads.filter(d => intervals.includes(d.interval))
-}
-
-/**
- * Group dyads by fret (for display purposes)
- */
-export function groupDyadsByFret(dyads: Dyad[]): Map<number, Dyad[]> {
-  const groups = new Map<number, Dyad[]>()
-
-  for (const dyad of dyads) {
-    const fret = Math.min(dyad.pos1.fret, dyad.pos2.fret)
-    if (!groups.has(fret)) {
-      groups.set(fret, [])
-    }
-    groups.get(fret)!.push(dyad)
-  }
-
-  return groups
-}
-
-/**
  * Check if two dyads overlap (share any position or are very close)
  */
-function dyadsOverlap(a: Dyad, b: Dyad, fretProximity = 2): boolean {
+function dyadsOverlap(a: Dyad, b: Dyad, fretProximity = 3): boolean {
   // Check if they share any string-fret position
-  const positions = [
+  const aPositions = [
     `${a.pos1.string}-${a.pos1.fret}`,
     `${a.pos2.string}-${a.pos2.fret}`,
   ]
@@ -163,7 +103,7 @@ function dyadsOverlap(a: Dyad, b: Dyad, fretProximity = 2): boolean {
     `${b.pos2.string}-${b.pos2.fret}`,
   ]
 
-  if (positions.some(p => bPositions.includes(p))) {
+  if (aPositions.some(p => bPositions.includes(p))) {
     return true
   }
 
@@ -183,7 +123,15 @@ function dyadsOverlap(a: Dyad, b: Dyad, fretProximity = 2): boolean {
 }
 
 /**
- * Get the harmonic importance score for a note relative to a chord root.
+ * Get the chord degree (interval from root) for a note.
+ * Returns the interval in semitones (0-11).
+ */
+function getChordDegree(note: NoteName, chordRoot: NoteName): number {
+  return getInterval(chordRoot, note)
+}
+
+/**
+ * Get the harmonic importance score for a chord degree.
  * Higher score = more important for defining chord quality.
  *
  * Scoring:
@@ -193,13 +141,11 @@ function dyadsOverlap(a: Dyad, b: Dyad, fretProximity = 2): boolean {
  * - 9th (m9/M9): 4 - extension
  * - 13th (m13/M13): 3 - extension
  * - 11th (P11/#11): 3 - extension
- * - 5th (P5/dim5/aug5): 2 - least defining
+ * - 5th (P5): 2 - least defining
  * - Other: 0
  */
-function getNoteImportance(note: NoteName, chordRoot: NoteName): number {
-  const interval = getInterval(chordRoot, note)
-
-  switch (interval) {
+function getDegreeImportance(degree: number): number {
+  switch (degree) {
     case 3:  // m3
     case 4:  // M3
       return 10
@@ -225,24 +171,11 @@ function getNoteImportance(note: NoteName, chordRoot: NoteName): number {
 }
 
 /**
- * Calculate the guide tone score for a dyad.
- * Sum of both notes' importance scores.
- */
-function getDyadGuideScore(dyad: Dyad, chordRoot: NoteName): number {
-  return getNoteImportance(dyad.pos1.note, chordRoot) +
-         getNoteImportance(dyad.pos2.note, chordRoot)
-}
-
-/**
  * Filter dyads to show only the most harmonically important ones.
  *
- * Prioritizes dyads containing guide tones (3rd, 7th) and other
- * chord-defining intervals. Selects the best non-overlapping dyads
- * across the fretboard.
- *
- * For 7th chords: prefers 3rd+7th dyads
- * For triads: prefers 3rd+root dyads
- * For extensions: includes 9th, 11th, 13th
+ * Prioritizes dyads containing different chord degrees (3rd+7th, 3rd+root, etc.)
+ * and rejects dyads where both notes are the same degree (e.g., two 3rds).
+ * Selects the best non-overlapping dyads across the fretboard.
  *
  * @param dyads Array of dyads to filter
  * @param chordRoot Root note of the chord
@@ -251,17 +184,26 @@ function getDyadGuideScore(dyad: Dyad, chordRoot: NoteName): number {
 export function filterGuideTones(dyads: Dyad[], chordRoot: NoteName | null, fretProximity = 3): Dyad[] {
   if (!chordRoot) return []
 
-  // Score all dyads
-  const scored = dyads.map(d => ({
-    dyad: d,
-    score: getDyadGuideScore(d, chordRoot)
-  }))
+  // Score all dyads, rejecting those with duplicate degrees
+  const scored: { dyad: Dyad; score: number }[] = []
 
-  // Filter out dyads with very low scores (both notes unimportant)
-  const meaningful = scored.filter(s => s.score >= 8)
+  for (const dyad of dyads) {
+    const degree1 = getChordDegree(dyad.pos1.note, chordRoot)
+    const degree2 = getChordDegree(dyad.pos2.note, chordRoot)
+
+    // Reject dyads where both notes are the same chord degree
+    if (degree1 === degree2) continue
+
+    const score = getDegreeImportance(degree1) + getDegreeImportance(degree2)
+
+    // Filter out dyads with very low scores
+    if (score >= 8) {
+      scored.push({ dyad, score })
+    }
+  }
 
   // Sort by score (highest first), then by fret position
-  meaningful.sort((a, b) => {
+  scored.sort((a, b) => {
     if (b.score !== a.score) return b.score - a.score
     return Math.min(a.dyad.pos1.fret, a.dyad.pos2.fret) -
            Math.min(b.dyad.pos1.fret, b.dyad.pos2.fret)
@@ -270,7 +212,7 @@ export function filterGuideTones(dyads: Dyad[], chordRoot: NoteName | null, fret
   // Greedily select non-overlapping dyads, preferring higher scores
   const selected: Dyad[] = []
 
-  for (const { dyad } of meaningful) {
+  for (const { dyad } of scored) {
     const overlapsWithSelected = selected.some(s => dyadsOverlap(dyad, s, fretProximity))
     if (!overlapsWithSelected) {
       selected.push(dyad)
@@ -283,35 +225,4 @@ export function filterGuideTones(dyads: Dyad[], chordRoot: NoteName | null, fret
   })
 
   return selected
-}
-
-/**
- * Find dyads for substitution chords based on degree
- */
-export function findSubstitutionDyads(
-  chordRoot: NoteName,
-  degree: Degree,
-  maxSlant = 1,
-  tuning = LAP_STEEL_TUNING,
-  maxFret = FRET_COUNT
-): Dyad[] {
-  const substitutions = getSubstitutions(chordRoot, degree)
-  const allSubDyads: Dyad[] = []
-
-  for (const sub of substitutions) {
-    const subDyads = findDyads(sub.substituteTones, maxSlant, tuning, maxFret)
-
-    // Mark them as substitution dyads
-    for (const dyad of subDyads) {
-      dyad.source = sub.type === 'tritone' ? 'tritone-sub' : 'diatonic-sub'
-      dyad.substitutionInfo = {
-        substituteChord: sub.substituteChord,
-        substituteDegree: sub.substituteDegree
-      }
-    }
-
-    allSubDyads.push(...subDyads)
-  }
-
-  return allSubDyads
 }
