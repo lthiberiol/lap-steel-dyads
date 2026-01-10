@@ -9,31 +9,26 @@ A web-based tool for discovering and visualizing dyad fingerings on lap steel gu
 - **Custom Tunings**: Choose from preset tunings (Gmaj9, C6/Am7, E9, Open G/D/E/A) or enter your own
 - **Interactive Fretboard**: SVG visualization with notes positioned on fret lines (lap steel style)
 - **Dyad Types**: Straight bar (same fret) and slant bar (adjacent frets) fingerings
-- **Chord Substitutions**: Diatonic function and tritone substitutions based on chord degree
-- **Guide Tones Filter**: Show only 3rds and 7ths for essential voice leading
+- **Guide Tones Filter**: Show only the most important dyads (prioritizes 3rd+7th, 3rd+root combinations)
 - **Audio Playback**: Click any dyad to hear it
 
 ## Usage
 
 1. **Select a tuning** from the dropdown or enter a custom tuning (space/comma separated notes)
 2. **Enter a chord** (e.g., `C`, `Am7`, `F#dim`, `Gmaj9`)
-3. **Set the degree** (I, ii, iii, IV, V, vi, vii°) to enable substitution suggestions
-4. **Explore dyads** on the fretboard - hover for details, click to play
+3. **Explore dyads** on the fretboard - hover for details, click to play
 
 ### Display Options
 
-- **All dyads / Guide tones**: Toggle between showing all intervals or just 3rds and 7ths
+- **All dyads / Guide tones**: Toggle between showing all intervals or just the most harmonically important
 - **Straight / Slant**: Filter by bar technique
-- **Substitutions**: Show/hide diatonic and tritone substitution dyads
 
 ### Color Coding
 
 | Color | Meaning |
 |-------|---------|
-| Amber | Direct chord tones (straight bar) |
-| Teal | Direct chord tones (slant bar) |
-| Green (dashed) | Diatonic substitution |
-| Magenta (dashed) | Tritone substitution |
+| Amber | Straight bar dyads |
+| Teal | Slant bar dyads |
 
 ## Preset Tunings
 
@@ -82,15 +77,14 @@ pixi run preview # or: npm run preview
 ```
 src/
 ├── components/
-│   ├── ChordInput.tsx      # Chord and degree input
+│   ├── ChordInput.tsx      # Chord input
 │   ├── TuningInput.tsx     # Tuning selector
 │   └── Fretboard.tsx       # SVG fretboard visualization
 ├── lib/
 │   ├── audio.ts            # Web Audio API playback
-│   ├── dyads.ts            # Dyad finding algorithms
+│   ├── dyads.ts            # Dyad finding and filtering
 │   ├── fretboard.ts        # Position calculations
-│   ├── music.ts            # Music theory (intervals, chords)
-│   └── substitutions.ts    # Chord substitution logic
+│   └── music.ts            # Music theory (intervals, chords)
 └── App.tsx                 # Main application
 ```
 
@@ -104,21 +98,12 @@ Two-note voicings extracted from chords. On lap steel, dyads are played with eit
 
 ### Guide Tones
 
-The 3rd and 7th define chord quality and are essential for voice leading. The guide tones filter shows only these intervals.
+The guide tones filter prioritizes dyads by harmonic importance:
+- **3rd + 7th** (score 19): Best for 7th chords - defines quality
+- **3rd + root** (score 16): Best for triads
+- **3rd + 9th/13th** (score 13-14): Good for extensions
 
-### Substitutions
-
-Based on the chord's degree in the key:
-
-| Degree | Function | Substitutes |
-|--------|----------|-------------|
-| I | Tonic | iii, vi |
-| ii | Subdominant | IV |
-| iii | Tonic | I, vi |
-| IV | Subdominant | ii, vi |
-| V | Dominant | vii°, bII7 (tritone) |
-| vi | Tonic | I, iii |
-| vii° | Dominant | V |
+Dyads with duplicate degrees (e.g., two 3rds) are excluded.
 
 ## Tech Stack
 
